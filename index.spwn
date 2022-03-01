@@ -1,0 +1,89 @@
+extract obj_props
+
+BG.set(@chroma::BLACK)
+GROUND.set(@chroma::BLACK)
+LINE.set(@chroma::BLACK)
+hide_player()
+toggle_bg_effect(false)
+
+let global = {}
+
+@log::wrap_time = (label: @string = "default", macro: () -> @NULL){
+    @log::time(label)
+    macro()
+    @log::time_end(label)
+}
+
+@log::wrap_time("read file", (){
+    let global.file = $.readfile("source.txt")
+})
+
+@log::wrap_time("lines split", (){
+    let global.lines = global.file.split("\n")
+})
+
+@log::wrap_time("create level", (){
+    TITLE = r"Fallout:\sEquestria"
+    CHAPTER_NUMBER = r"^\[\#\]"
+    CHAPTER = r"^\[\_\]"
+    FLUSH = r"\*\*\*\s+\*\*\*\s+\*\*\*"
+    
+    DISTANCE = 5
+
+    let horizontal_line = 125
+
+    add_line = (let line: @string) {
+        line = line.trim()
+
+        let size = 0.2
+
+        let newlines_start = 0
+        let newlines_end = 1
+
+        if !line.is_empty() {
+            if line.find(TITLE) {
+                line = TITLE.replace(r"\\s", "\n")
+                size = 1.5
+                newlines_start = 12
+                newlines_end = 12
+            } else if line.find(CHAPTER_NUMBER) {
+                line = line.replace(CHAPTER_NUMBER, "")
+                size = 0.75
+                newlines_start = 4
+                newlines_end = 2
+            } else if line.find(CHAPTER) {
+                line = line.replace(CHAPTER, "")
+                size = 0.9
+                newlines_start = 3
+                newlines_end = 5
+            } else if line.find(FLUSH) {
+                horizontal_line += 2
+                return
+            }
+        }
+
+        horizontal_line += newlines_start
+
+        if !line.is_empty() {
+            line.to_obj().with(
+                X,
+                horizontal_line * DISTANCE
+            ).with(
+                Y,
+                5 * 30
+            ).with(
+                SCALING,
+                size
+            ).with(
+                ROTATION,
+                270
+            ).add()
+        }
+
+        horizontal_line += newlines_end
+    }
+
+    for i in 0..global.lines.length {
+        add_line(global.lines[i])
+    }
+})
